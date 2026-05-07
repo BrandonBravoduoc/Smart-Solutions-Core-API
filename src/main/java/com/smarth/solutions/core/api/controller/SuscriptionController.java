@@ -23,7 +23,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/suscriptions")
 public class SuscriptionController {
 
-    private final SuscriptionService service;
+    private SuscriptionService service;
 
     public SuscriptionController(SuscriptionService service) {
         this.service = service;
@@ -31,12 +31,12 @@ public class SuscriptionController {
 
     @GetMapping
     public List<SuscriptionDTO> getAll() {
-        return service.getAll();
+        return service.findAll();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<SuscriptionDTO> getById(@PathVariable Long id) {
-        SuscriptionDTO dto = service.getById(id);
+        SuscriptionDTO dto = service.findById(id);
         return ResponseEntity.ok(dto);
     }
 
