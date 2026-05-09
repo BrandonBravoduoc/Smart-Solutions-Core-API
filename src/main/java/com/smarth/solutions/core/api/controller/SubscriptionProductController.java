@@ -14,44 +14,41 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.smarth.solutions.core.api.dto.SuscriptionDTO;
-import com.smarth.solutions.core.api.service.SuscriptionService;
+import com.smarth.solutions.core.api.dto.SubscriptionProductDTO;
+import com.smarth.solutions.core.api.service.SubscriptionProductService;
 
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/suscriptions")
-public class SuscriptionController {
+@RequestMapping("/api/subscription-products")
+public class SubscriptionProductController {
 
-    private SuscriptionService service;
+    private final SubscriptionProductService service;
 
-    public SuscriptionController(SuscriptionService service) {
+    public SubscriptionProductController(SubscriptionProductService service) {
         this.service = service;
     }
 
     @GetMapping
-    public List<SuscriptionDTO> getAll() {
+    public List<SubscriptionProductDTO> getAll() {
         return service.findAll();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SuscriptionDTO> getById(@PathVariable Long id) {
-        SuscriptionDTO dto = service.findById(id);
-        return ResponseEntity.ok(dto);
+    public ResponseEntity<SubscriptionProductDTO> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<SuscriptionDTO> create(@Valid @RequestBody SuscriptionDTO dto) {
-        SuscriptionDTO created = service.create(dto);
-        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-                .buildAndExpand(created.getIdSuscription()).toUri();
+    public ResponseEntity<SubscriptionProductDTO> create(@Valid @RequestBody SubscriptionProductDTO dto) {
+        SubscriptionProductDTO created = service.create(dto);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(created.getId()).toUri();
         return ResponseEntity.created(uri).body(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SuscriptionDTO> update(@PathVariable Long id, @Valid @RequestBody SuscriptionDTO dto) {
-        SuscriptionDTO updated = service.update(id, dto);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<SubscriptionProductDTO> update(@PathVariable Long id, @Valid @RequestBody SubscriptionProductDTO dto) {
+        return ResponseEntity.ok(service.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
