@@ -1,29 +1,30 @@
 package com.smarth.solutions.core.api.dto;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class SubscriptionProductDTO {
-    private Long id;
+public record SubscriptionProductDTO(
 
-    @NotBlank
-    private String name;
+    @Schema(description = "ID único del producto de suscripción", example = "1", accessMode = Schema.AccessMode.READ_ONLY)
+    Long id,
 
-    private String description;
+    @NotBlank(message = "El nombre del producto no puede estar vacío")
+    @Schema(description = "Nombre comercial del plan", example = "Plan Premium")
+    String name,
 
-    @NotNull
-    private Long price;
+    @NotBlank(message = "La descripción no puede estar vacía")
+    @Schema(description = "Descripción detallada de los beneficios del plan", example = "Acceso ilimitado a todas las funciones premium por 1 mes.")
+    String description,
 
-    @NotNull
-    private Integer durationMonths;
+    @NotNull(message = "El precio es obligatorio")
+    @Min(value = 0, message = "El precio debe ser mayor o igual a cero")
+    @Schema(description = "Precio del producto en CLP", example = "9990")
+    Long price,
 
-    private Integer trialDays;
+    @NotNull(message = "La duración en meses es obligatoria")
+    @Schema(description = "Duración del plan expresada en meses", example = "1")
+    Integer durationInMonths
 
-
-}
+) {}

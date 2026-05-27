@@ -23,9 +23,9 @@ public class UserSubscriptionService {
     private final SubscriptionProductRepository productRepository;
     private final Validation validation;
 
-    public UserSubscriptionService(UserSubscriptionRepository repository, 
-                                   SubscriptionProductRepository productRepository, 
-                                   Validation validation) {
+    public UserSubscriptionService(UserSubscriptionRepository repository,
+            SubscriptionProductRepository productRepository,
+            Validation validation) {
         this.repository = repository;
         this.productRepository = productRepository;
         this.validation = validation;
@@ -33,9 +33,9 @@ public class UserSubscriptionService {
 
     public List<UserSubscriptionDTO> findByUser(String userId) {
         return repository.findByUserId(userId)
-        .stream()
-        .map(this::toDto)
-        .collect(Collectors.toList());
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     public UserSubscriptionDTO findById(Long id) {
@@ -44,29 +44,28 @@ public class UserSubscriptionService {
     }
 
     public UserSubscriptionDTO create(UserSubscriptionDTO dto) {
-        
-        SubscriptionProduct product = validation.requireProduct(dto.getProductId());
+        SubscriptionProduct product = validation.requireProduct(dto.productId());
         UserSubscription s = new UserSubscription();
-        
-        s.setUserId(dto.getUserId());
+        s.setUserId(dto.userId());
         s.setProduct(product);
-        s.setStatus(dto.getStatus() == null ? "PENDING" : dto.getStatus());
-        s.setStartAt(dto.getStartAt() == null ? LocalDateTime.now() : dto.getStartAt());
-        s.setCurrentPeriodEnd(dto.getCurrentPeriodEnd());
-        
+        s.setStatus(dto.status() == null ? "active" : dto.status());
+        s.setStartAt(dto.startAt() == null ? LocalDateTime.now() : dto.startAt());
+        s.setCurrentPeriodEnd(dto.currentPeriodEnd());
+
         UserSubscription saved = repository.save(s);
-        
+
         return toDto(saved);
     }
 
     public UserSubscriptionDTO update(Long id, UserSubscriptionDTO dto) {
 
         UserSubscription existing = validation.requireUserSubscription(id);
-        
-        if (dto.getStatus() != null) existing.setStatus(dto.getStatus());
-        
-        if (dto.getCurrentPeriodEnd() != null) existing.setCurrentPeriodEnd(dto.getCurrentPeriodEnd());
-        
+        if (dto.status() != null)
+            existing.setStatus(dto.status());
+
+        if (dto.currentPeriodEnd() != null)
+            existing.setCurrentPeriodEnd(dto.currentPeriodEnd());
+
         UserSubscription saved = repository.save(existing);
         return toDto(saved);
     }
@@ -76,11 +75,12 @@ public class UserSubscriptionService {
     }
 
     private UserSubscriptionDTO toDto(UserSubscription s) {
-        return new UserSubscriptionDTO(s.getId(), 
-        s.getUserId(), 
-        s.getProduct().getId(), 
-        s.getStatus(), 
-        s.getStartAt(), 
-        s.getCurrentPeriodEnd());
+        return new UserSubscriptionDTO(
+                s.getId(),
+                s.getUserId(),
+                s.getProduct().getId(),
+                s.getStatus(),
+                s.getStartAt(),
+                s.getCurrentPeriodEnd());
     }
 }

@@ -45,11 +45,12 @@ public class SubscriptionProductService {
 
     public SubscriptionProductDTO update(Long id, SubscriptionProductDTO dto) {
         SubscriptionProduct existing = validation.requireProduct(id);
-        existing.setName(dto.getName());
-        existing.setDescription(dto.getDescription());
-        existing.setPrice(dto.getPrice());
-        existing.setDurationMonths(dto.getDurationMonths());
-        existing.setTrialDays(dto.getTrialDays());
+        
+        existing.setName(dto.name());
+        existing.setDescription(dto.description());
+        existing.setPrice(dto.price());
+        existing.setDurationMonths(dto.durationInMonths());
+        
         SubscriptionProduct saved = repository.save(existing);
         return toDto(saved);
     }
@@ -60,22 +61,21 @@ public class SubscriptionProductService {
 
     private SubscriptionProductDTO toDto(SubscriptionProduct p) {
         return new SubscriptionProductDTO(
-        p.getId(), 
-        p.getName(), 
-        p.getDescription(), 
-        p.getPrice(), 
-        p.getDurationMonths(), 
-        p.getTrialDays());
+            p.getId(), 
+            p.getName(), 
+            p.getDescription(), 
+            p.getPrice(), 
+            p.getDurationMonths()
+        );
     }
 
     private SubscriptionProduct toEntity(SubscriptionProductDTO dto) {
         SubscriptionProduct p = new SubscriptionProduct();
         
-        p.setName(dto.getName());
-        p.setDescription(dto.getDescription());
-        p.setPrice(dto.getPrice());
-        p.setDurationMonths(dto.getDurationMonths());
-        p.setTrialDays(dto.getTrialDays());
+        p.setName(dto.name());
+        p.setDescription(dto.description());
+        p.setPrice(dto.price());
+        p.setDurationMonths(dto.durationInMonths());
         
         return p;
     }
