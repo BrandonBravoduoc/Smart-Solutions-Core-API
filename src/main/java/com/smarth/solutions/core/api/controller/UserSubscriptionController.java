@@ -20,7 +20,7 @@ import com.smarth.solutions.core.api.service.UserSubscriptionService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/users/{userId}/subscriptions")
+@RequestMapping("/api/v1/users/{userId}/subscriptions")
 public class UserSubscriptionController {
 
     private final UserSubscriptionService service;
@@ -37,24 +37,34 @@ public class UserSubscriptionController {
     @GetMapping("/{id}")
     public ResponseEntity<UserSubscriptionDTO> getById(@PathVariable String userId, @PathVariable Long id) {
         UserSubscriptionDTO dto = service.findById(id);
-        if (!dto.getUserId().equals(userId)) {
+        if (!dto.userId().equals(userId)) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(dto);
     }
 
     @PostMapping
-    public ResponseEntity<UserSubscriptionDTO> create(@PathVariable String userId, @Valid @RequestBody UserSubscriptionDTO dto) {
-        dto.setUserId(userId);
-        UserSubscriptionDTO created = service.create(dto);
-        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(created.getId()).toUri();
+    public ResponseEntity<UserSubscriptionDTO> create(@PathVariable String userId,
+            @Valid @RequestBody UserSubscriptionDTO dto) {
+        UserSubscriptionDTO dtoWithUser = new UserSubscriptionDTO(
+                dto.id(),
+                userId,
+                dto.productId(),
+                dto.status(),
+                dto.startAt(),
+                dto.currentPeriodEnd());
+
+        UserSubscriptionDTO created = service.create(dtoWithUser);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(created.id()).toUri();
         return ResponseEntity.created(uri).body(created);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<UserSubscriptionDTO> update(@PathVariable String userId, @PathVariable Long id, @RequestBody UserSubscriptionDTO dto) {
+    public ResponseEntity<UserSubscriptionDTO> update(@PathVariable String userId, @PathVariable Long id,
+            @RequestBody UserSubscriptionDTO dto) {
         UserSubscriptionDTO existing = service.findById(id);
-        if (!existing.getUserId().equals(userId)) return ResponseEntity.notFound().build();
+        if (!existing.userId().equals(userId))
+            return ResponseEntity.notFound().build();
         UserSubscriptionDTO updated = service.update(id, dto);
         return ResponseEntity.ok(updated);
     }
@@ -62,7 +72,8 @@ public class UserSubscriptionController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable String userId, @PathVariable Long id) {
         UserSubscriptionDTO existing = service.findById(id);
-        if (!existing.getUserId().equals(userId)) return ResponseEntity.notFound().build();
+        if (!existing.userId().equals(userId))
+            return ResponseEntity.notFound().build();
         service.delete(id);
         return ResponseEntity.noContent().build();
     }

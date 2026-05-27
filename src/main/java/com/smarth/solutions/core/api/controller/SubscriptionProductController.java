@@ -20,7 +20,7 @@ import com.smarth.solutions.core.api.service.SubscriptionProductService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/subscription-products")
+@RequestMapping("/api/v1/subscription-products")
 public class SubscriptionProductController {
 
     private final SubscriptionProductService service;
@@ -42,12 +42,14 @@ public class SubscriptionProductController {
     @PostMapping
     public ResponseEntity<SubscriptionProductDTO> create(@Valid @RequestBody SubscriptionProductDTO dto) {
         SubscriptionProductDTO created = service.create(dto);
-        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(created.getId()).toUri();
+        // Cambiamos getId() por id()
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(created.id()).toUri();
         return ResponseEntity.created(uri).body(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SubscriptionProductDTO> update(@PathVariable Long id, @Valid @RequestBody SubscriptionProductDTO dto) {
+    public ResponseEntity<SubscriptionProductDTO> update(@PathVariable Long id,
+            @Valid @RequestBody SubscriptionProductDTO dto) {
         return ResponseEntity.ok(service.update(id, dto));
     }
 
