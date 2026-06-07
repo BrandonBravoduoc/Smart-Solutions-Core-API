@@ -1,5 +1,5 @@
 package com.smarth.solutions.core.api.controller;
 
-public class UserSubscriptionController {
+public class SubscriptionController {
     
 }

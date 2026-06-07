@@ -1,5 +1,5 @@
 package com.smarth.solutions.core.api.repository;
 
-public class UserSubscriptionRepository {
+public class SubscriptionRepository {
     
 }

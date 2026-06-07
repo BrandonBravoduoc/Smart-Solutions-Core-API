@@ -1,5 +1,5 @@
 package com.smarth.solutions.core.api.service;
 
-public class UserSubscriptionService {
+public class SubscriptionHistoryService {
     
 }
