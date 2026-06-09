@@ -24,7 +24,7 @@ public class UserSubscriptionDTO {
     ) {
         public static Response fromEntity(UserSubscription sub) {
             return new Response(
-                    sub.getSubscription().getId(),
+                    sub.getId(),
                     sub.getUserId(),
                     sub.getStatus().name(),
                     sub.getStartDate(),

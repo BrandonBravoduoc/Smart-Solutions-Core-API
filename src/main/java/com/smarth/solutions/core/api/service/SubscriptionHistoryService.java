@@ -4,18 +4,18 @@ import com.smarth.solutions.core.api.model.entity.Subscription;
 import com.smarth.solutions.core.api.model.entity.SubscriptionHistory;
 import com.smarth.solutions.core.api.model.enums.HistoryAction;
 import com.smarth.solutions.core.api.repository.SubscriptionHistoryRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class SubscriptionHistoryService {
 
-    private final SubscriptionHistoryRepository historyRepository;
+    @Autowired
+    private SubscriptionHistoryRepository historyRepository;
 
     @Transactional
     public void recordEvent(Long userId, Subscription plan, LocalDateTime start, LocalDateTime end, HistoryAction action) {
