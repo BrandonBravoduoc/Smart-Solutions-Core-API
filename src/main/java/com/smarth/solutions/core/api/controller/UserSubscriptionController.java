@@ -23,7 +23,7 @@ public class UserSubscriptionController {
     }
 
     @PostMapping("/activate")
-    @PreAuthorize("hasRole('ADMINISTRADOR') or authentication.name == #userId.toString()")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<UserSubscriptionDTO.Response> activateOrRenew(
             @PathVariable Long userId,
             @RequestBody UserSubscriptionDTO.ActivateRequest request) {
