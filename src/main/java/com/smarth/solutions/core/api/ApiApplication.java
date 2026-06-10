@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
 @EnableCaching
-@EnableJpaRepositories(basePackages = "com.smart_solutions_auth.api.repository")
+@EnableJpaRepositories(basePackages = "com.smarth.solutions.core.api.repository")
 public class ApiApplication {
 
 	public static void main(String[] args) {

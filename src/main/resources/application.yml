@@ -6,6 +6,8 @@ server:
   port: ${SERVER_PORT:8082}
 
 spring:
+  config:
+    import: "optional:configserver:"
   cache:
     type: redis
   data:
