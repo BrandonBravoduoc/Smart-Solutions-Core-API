@@ -1,42 +1,46 @@
-spring:
-  application:
-    name: core-service
-  
-  datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: 1234
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-
-  cloud:
-    config:
-      enabled: false
-
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
-      repositories:
-        enabled: false 
-        
-  cache:
-    type: redis
-    redis:
-      time-to-live: 1h
-      use-key-prefix: true
+logging:
+  level:
+    root: INFO
 
 server:
-  port: 8082
+  port: ${SERVER_PORT:8082}
 
+spring:
+  cache:
+    type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST:smart-solutions-cache-po4yvy.serverless.sae1.cache.amazonaws.com}
+      port: ${REDIS_PORT:6379}
+      username: ${REDIS_USERNAME:api-core-user}
+      password: ${REDIS_PASSWORD:}
+      ssl:
+        enabled: ${REDIS_SSL:true}
+      timeout: ${REDIS_TIMEOUT:5s}
+      connect-timeout: ${REDIS_CONNECT_TIMEOUT:10s}
+
+  datasource:
+    url: ${DB_URL:jdbc:h2:mem:auth_db}
+    driver-class-name: ${DB_DRIVER_CLASS_NAME:org.h2.Driver}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:password}
+
+  jpa:
+    database-platform: ${DB_DIALECT:org.hibernate.dialect.H2Dialect}
+    hibernate:
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: ${SHOW_SQL:true}
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      
 springdoc:
   api-docs:
     path: /v1/api-docs
   swagger-ui:
     path: /swagger-ui.html
+    operationsSorter: alpha
+    displayRequestDuration: true
     enabled: true
