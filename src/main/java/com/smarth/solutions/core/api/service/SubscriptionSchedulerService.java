@@ -4,11 +4,11 @@ import com.smarth.solutions.core.api.model.entity.UserSubscription;
 import com.smarth.solutions.core.api.model.enums.HistoryAction;
 import com.smarth.solutions.core.api.model.enums.SubscriptionStatus;
 import com.smarth.solutions.core.api.repository.UserSubscriptionRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -16,12 +16,16 @@ import java.util.List;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class SubscriptionSchedulerService {
 
-    private final UserSubscriptionRepository userRepository;
-    private final SubscriptionHistoryService historyService;
-    private final CacheManager cacheManager; 
+    @Autowired
+    private UserSubscriptionRepository userRepository;
+    
+    @Autowired
+    private SubscriptionHistoryService historyService;
+    
+    @Autowired
+    private CacheManager cacheManager; 
 
 
     @Scheduled(cron = "0 0 * * * *")

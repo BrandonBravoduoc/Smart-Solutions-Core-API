@@ -3,23 +3,26 @@ package com.smarth.solutions.core.api.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.smarth.solutions.core.api.dto.SubscriptionDTO;
 import com.smarth.solutions.core.api.model.entity.Subscription;
 import com.smarth.solutions.core.api.repository.SubscriptionRepository;
 import com.smarth.solutions.core.api.util.Validations;
 
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class SubscriptionService {
 
-    private final SubscriptionRepository subscriptionRepository;
-    private final Validations validations;
+    @Autowired
+    private SubscriptionRepository subscriptionRepository;
+    
+    @Autowired
+    private Validations validations;
 
 
 

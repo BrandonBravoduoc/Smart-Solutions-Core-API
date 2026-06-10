@@ -7,10 +7,10 @@ import com.smarth.solutions.core.api.model.enums.HistoryAction;
 import com.smarth.solutions.core.api.model.enums.SubscriptionStatus;
 import com.smarth.solutions.core.api.repository.UserSubscriptionRepository;
 import com.smarth.solutions.core.api.util.Validations;
-import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -18,13 +18,19 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class UserSubscriptionService {
 
-    private final UserSubscriptionRepository userSubscriptionRepository;
-    private final SubscriptionService subscriptionService;
-    private final SubscriptionHistoryService historyService;
-    private final Validations validations;
+    @Autowired
+    private UserSubscriptionRepository userSubscriptionRepository;
+    
+    @Autowired
+    private SubscriptionService subscriptionService;
+    
+    @Autowired
+    private SubscriptionHistoryService historyService;
+    
+    @Autowired
+    private Validations validations;
 
     @Cacheable(value = "user_subscription_dto", key = "#userId")
     public Optional<UserSubscriptionDTO.Response> getSubscriptionDtoByUserId(Long userId) {
