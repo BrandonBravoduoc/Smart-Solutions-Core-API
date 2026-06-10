@@ -15,7 +15,7 @@ public class UserSubscriptionController {
     private final UserSubscriptionService userSubscriptionService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or authentication.name == #userId.toString()")
+    @PreAuthorize("hasRole('ADMINISTRADOR') or authentication.name == #userId.toString()")
     public ResponseEntity<UserSubscriptionDTO.Response> getSubscriptionByUserId(@PathVariable Long userId) {
         return userSubscriptionService.getSubscriptionDtoByUserId(userId)
                 .map(ResponseEntity::ok)
@@ -23,7 +23,7 @@ public class UserSubscriptionController {
     }
 
     @PostMapping("/activate")
-    @PreAuthorize("hasRole('ADMIN') or authentication.name == #userId.toString()")
+    @PreAuthorize("hasRole('ADMINISTRADOR') or authentication.name == #userId.toString()")
     public ResponseEntity<UserSubscriptionDTO.Response> activateOrRenew(
             @PathVariable Long userId,
             @RequestBody UserSubscriptionDTO.ActivateRequest request) {
@@ -31,7 +31,7 @@ public class UserSubscriptionController {
     }
 
     @PostMapping("/cancel")
-    @PreAuthorize("hasRole('ADMIN') or authentication.name == #userId.toString()")
+    @PreAuthorize("hasRole('ADMINISTRADOR') or authentication.name == #userId.toString()")
     public ResponseEntity<UserSubscriptionDTO.Response> cancelRenewal(@PathVariable Long userId) {
         return ResponseEntity.ok(userSubscriptionService.cancelRenewal(userId));
     }

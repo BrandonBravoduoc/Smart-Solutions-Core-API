@@ -6,10 +6,16 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
-@EnableMethodSecurity
+@EnableMethodSecurity 
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final AuthenticationFilter headerFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -17,9 +23,10 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
-            );
+                .anyRequest().permitAll() 
+            )
+            .addFilterBefore(headerFilter, UsernamePasswordAuthenticationFilter.class);
+            
         return http.build();
     }
-
 }

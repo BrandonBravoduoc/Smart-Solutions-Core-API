@@ -29,13 +29,13 @@ public class SubscriptionController {
 
 
     @GetMapping("/admin/all")
-    @PreAuthorize("hasRole('ADMIN')") 
+    @PreAuthorize("hasRole('ADMINISTRADOR')") 
     public ResponseEntity<List<SubscriptionDTO.Response>> getAllPlansForAdmin() {
         return ResponseEntity.ok(subscriptionService.getAllPlansForAdmin());
     }
 
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/create")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<SubscriptionDTO.Response> createPlan(@RequestBody SubscriptionDTO.Request requestDto) {
         SubscriptionDTO.Response createdPlan = subscriptionService.createPlan(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdPlan);
@@ -43,7 +43,7 @@ public class SubscriptionController {
 
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')") 
+    @PreAuthorize("hasRole('ADMINISTRADOR')") 
     public ResponseEntity<SubscriptionDTO.Response> updatePlan(
             @PathVariable Long id, 
             @RequestBody SubscriptionDTO.Request requestDto) {
