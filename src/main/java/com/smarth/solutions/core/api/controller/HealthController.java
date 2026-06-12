@@ -1,4 +1,4 @@
-package com.smarth.solutions.core.api.util;
+package com.smarth.solutions.core.api.controller;
 
 import java.time.Instant;
 import java.util.HashMap;
