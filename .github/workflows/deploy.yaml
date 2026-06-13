@@ -50,7 +50,7 @@ jobs:
     - name: Descargar definición de tarea actual
       run: |
         aws ecs describe-task-definition \
-          --task-definition api-core-def-v1 \
+          --task-definition api-payment-def-v1 \
           --query taskDefinition > task-definition.json
 
     - name: Insertar la nueva imagen en la Definición de Tarea
@@ -65,6 +65,6 @@ jobs:
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
         task-definition: ${{ steps.render-task-def.outputs.task-definition }}
-        service: api-core-def-v1-service-r63gcod4
+        service: api-payment-def-v1-service-x0ksd7bq
         cluster: default
         wait-for-service-stability: true 
