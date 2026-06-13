@@ -32,7 +32,7 @@ public class UserSubscriptionService {
     @Autowired
     private Validations validations;
 
-    @Cacheable(value = "user_subscription_dto", key = "#userId")
+    @Cacheable(value = "user_subscription_dto", key = "#userId", unless = "#result == null || #result.isEmpty()")
     public Optional<UserSubscriptionDTO.Response> getSubscriptionDtoByUserId(Long userId) {
         validations.validateRequiredId(userId, "userId");
         return userSubscriptionRepository.findByUserId(userId)

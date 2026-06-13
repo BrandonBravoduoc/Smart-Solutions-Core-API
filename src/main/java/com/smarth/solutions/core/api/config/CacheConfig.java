@@ -1,9 +1,12 @@
 package com.smarth.solutions.core.api.config;
 
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachingConfigurer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.cache.interceptor.SimpleCacheErrorHandler;
@@ -24,14 +27,18 @@ import java.util.Map;
 
 @Configuration
 @EnableCaching
-public class CacheConfig {
-    
+@RequiredArgsConstructor
+public class CacheConfig implements CachingConfigurer {
+
     private static final Logger log = LoggerFactory.getLogger(CacheConfig.class);
+
+    private final RedisConnectionFactory connectionFactory;
 
     @SuppressWarnings("removal")
     @Bean
-    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        
+    @Override
+    public CacheManager cacheManager() {
+
         GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
 
         RedisCacheConfiguration defaultCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
@@ -46,13 +53,13 @@ public class CacheConfig {
         
         cacheConfigurations.put("user_subscription_dto", defaultCacheConfig.entryTtl(Duration.ofHours(1)));
 
-        return RedisCacheManager.builder(connectionFactory)
+        return RedisCacheManager.builder(this.connectionFactory)
             .cacheDefaults(defaultCacheConfig)
             .withInitialCacheConfigurations(cacheConfigurations)
             .build();
     }
 
-    @Bean
+    @Override
     public CacheErrorHandler errorHandler() {
         return new SimpleCacheErrorHandler() {
 
