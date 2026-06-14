@@ -4,6 +4,7 @@ package com.smarth.solutions.core.api.config;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurer;
@@ -14,6 +15,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -90,6 +92,20 @@ public class CacheConfig implements CachingConfigurer {
             public void handleCacheClearError(@NonNull RuntimeException exception, @NonNull Cache cache) {
                 log.error("Error crítico al limpiar caché completa de la tabla: {}", cache.getName());
                 throw exception;
+            }
+        };
+    }
+
+    @Bean
+    CommandLineRunner checkRedisConnection(RedisConnectionFactory connectionFactory) {
+        return args -> {
+            try (RedisConnection connection = connectionFactory.getConnection()) {
+                String pong = connection.ping();
+                log.info("Conexión Redis/Valkey verificada en el arranque :D {}", pong);
+            } catch (Exception e) {
+                log.error(
+                        "No se pudo verificar la conexión inicial a Redis/Valkey. Revisa host, puerto, TLS, usuario ACL y contraseña.",
+                        e);
             }
         };
     }
