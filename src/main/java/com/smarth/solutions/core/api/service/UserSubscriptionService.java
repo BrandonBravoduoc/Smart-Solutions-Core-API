@@ -34,6 +34,7 @@ public class UserSubscriptionService {
     @Autowired
     private Validations validations;
 
+    @Transactional(readOnly = true)
     @Cacheable(value = "user_subscription_dto", key = "#userId", unless = "#result == null || #result.isEmpty()")
     public Optional<UserSubscriptionDTO.Response> getSubscriptionDtoByUserId(Long userId) {
         validations.validateRequiredId(userId, "userId");
@@ -111,6 +112,7 @@ public class UserSubscriptionService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<UserSubscriptionDTO.Response> getAllSubscriptions() {
         return userSubscriptionRepository.findAll()
                 .stream()
