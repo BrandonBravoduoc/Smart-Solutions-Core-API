@@ -9,7 +9,6 @@ import com.smarth.solutions.core.api.model.enums.SubscriptionStatus;
 import com.smarth.solutions.core.api.repository.UserSubscriptionRepository;
 import com.smarth.solutions.core.api.util.Validations;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +34,6 @@ public class UserSubscriptionService {
     private Validations validations;
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "user_subscription_dto", key = "#userId", unless = "#result == null || #result.isEmpty()")
     public Optional<UserSubscriptionDTO.Response> getSubscriptionDtoByUserId(Long userId) {
         validations.validateRequiredId(userId, "userId");
         return userSubscriptionRepository.findByUserId(userId)
