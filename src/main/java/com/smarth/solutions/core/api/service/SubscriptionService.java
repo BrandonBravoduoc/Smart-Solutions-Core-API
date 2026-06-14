@@ -20,7 +20,7 @@ public class SubscriptionService {
 
     @Autowired
     private SubscriptionRepository subscriptionRepository;
-    
+
     @Autowired
     private Validations validations;
 
@@ -61,10 +61,10 @@ public class SubscriptionService {
         plan.setDetails(requestDto.details());
         plan.setPrice(requestDto.price());
         plan.setDurationMonths(requestDto.durationMonths());
-        
+
         validations.validatePlanDetails(plan);
         plan.setActive(true);
-        
+
         Subscription savedPlan = subscriptionRepository.save(plan);
         return SubscriptionDTO.Response.fromEntity(savedPlan); 
     }
@@ -76,16 +76,23 @@ public class SubscriptionService {
             throw new IllegalArgumentException("Los datos de actualización del plan no pueden ser nulos.");
         }
         Subscription plan = getPlanEntityById(id);
-        
+
         plan.setName(requestDto.name());
         plan.setDetails(requestDto.details());
         plan.setPrice(requestDto.price());
         plan.setDurationMonths(requestDto.durationMonths());
         plan.setActive(requestDto.isActive());
-        
+
         validations.validatePlanDetails(plan);
-        
+
         Subscription updatedPlan = subscriptionRepository.save(plan);
-        return SubscriptionDTO.Response.fromEntity(updatedPlan); 
+        return SubscriptionDTO.Response.fromEntity(updatedPlan);
+    }
+
+    @Transactional
+    @CacheEvict(value = "active_plans_dto", allEntries = true)
+    public void deletePlan(Long id) {
+        Subscription plan = getPlanEntityById(id);
+        subscriptionRepository.delete(plan);
     }
 }

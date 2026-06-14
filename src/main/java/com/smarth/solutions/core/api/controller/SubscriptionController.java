@@ -43,10 +43,17 @@ public class SubscriptionController {
 
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMINISTRADOR')") 
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<SubscriptionDTO.Response> updatePlan(
-            @PathVariable Long id, 
+            @PathVariable Long id,
             @RequestBody SubscriptionDTO.Request requestDto) {
         return ResponseEntity.ok(subscriptionService.updatePlan(id, requestDto));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<Void> deletePlan(@PathVariable Long id) {
+        subscriptionService.deletePlan(id);
+        return ResponseEntity.noContent().build();
     }
 }
