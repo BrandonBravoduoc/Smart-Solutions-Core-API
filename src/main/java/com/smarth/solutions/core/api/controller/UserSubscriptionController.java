@@ -1,11 +1,14 @@
 package com.smarth.solutions.core.api.controller;
 
+import com.smarth.solutions.core.api.dto.SubscriptionHistoryDTO;
 import com.smarth.solutions.core.api.dto.UserSubscriptionDTO;
 import com.smarth.solutions.core.api.service.UserSubscriptionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/subscriptions/{userId}/subscription")
@@ -34,5 +37,11 @@ public class UserSubscriptionController {
     @PreAuthorize("hasRole('ADMINISTRADOR') or authentication.name == #userId.toString()")
     public ResponseEntity<UserSubscriptionDTO.Response> cancelRenewal(@PathVariable Long userId) {
         return ResponseEntity.ok(userSubscriptionService.cancelRenewal(userId));
+    }
+
+    @GetMapping("/history")
+    @PreAuthorize("hasRole('ADMINISTRADOR') or authentication.name == #userId.toString()")
+    public ResponseEntity<List<SubscriptionHistoryDTO.Response>> getHistory(@PathVariable Long userId) {
+        return ResponseEntity.ok(userSubscriptionService.getHistoryByUserId(userId));
     }
 }

@@ -1,5 +1,6 @@
 package com.smarth.solutions.core.api.service;
 
+import com.smarth.solutions.core.api.dto.SubscriptionHistoryDTO;
 import com.smarth.solutions.core.api.dto.UserSubscriptionDTO;
 import com.smarth.solutions.core.api.model.entity.Subscription;
 import com.smarth.solutions.core.api.model.entity.UserSubscription;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -99,5 +101,20 @@ public class UserSubscriptionService {
         historyService.recordEvent(userId, sub.getSubscription(), sub.getCurrentPeriodStart(), sub.getCurrentPeriodEnd(), HistoryAction.CANCELLATION);
 
         return UserSubscriptionDTO.Response.fromEntity(savedSub);
+    }
+
+    public List<SubscriptionHistoryDTO.Response> getHistoryByUserId(Long userId) {
+        validations.validateRequiredId(userId, "userId");
+        return historyService.getHistoryByUserId(userId)
+                .stream()
+                .map(SubscriptionHistoryDTO.Response::fromEntity)
+                .toList();
+    }
+
+    public List<UserSubscriptionDTO.Response> getAllSubscriptions() {
+        return userSubscriptionRepository.findAll()
+                .stream()
+                .map(UserSubscriptionDTO.Response::fromEntity)
+                .toList();
     }
 }
