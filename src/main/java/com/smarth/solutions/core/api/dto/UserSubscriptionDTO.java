@@ -2,28 +2,38 @@ package com.smarth.solutions.core.api.dto;
 
 import java.time.LocalDateTime;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.smarth.solutions.core.api.model.entity.UserSubscription;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class UserSubscriptionDTO {
-    private Long id;
+    
+   public record ActivateRequest(
+            Long planId
+    ) {}
 
-    @NotBlank
-    private String userId;
-
-    @NotNull
-    private Long productId;
-
-    private String status;
-
-    private LocalDateTime startAt;
-
-    private LocalDateTime currentPeriodEnd;
-
+    public record Response(
+            Long subscriptionId,     
+            Long userId,
+            String status,           
+            LocalDateTime startDate, 
+            LocalDateTime currentPeriodStart,
+            LocalDateTime currentPeriodEnd,
+            boolean cancelAtPeriodEnd,
+            
+            Long planId,
+            String planName
+    ) {
+        public static Response fromEntity(UserSubscription sub) {
+            return new Response(
+                    sub.getId(),
+                    sub.getUserId(),
+                    sub.getStatus().name(),
+                    sub.getStartDate(),
+                    sub.getCurrentPeriodStart(),
+                    sub.getCurrentPeriodEnd(),
+                    sub.isCancelAtPeriodEnd(),
+                    sub.getSubscription().getId(),
+                    sub.getSubscription().getName()
+            );
+        }
+    }
 }

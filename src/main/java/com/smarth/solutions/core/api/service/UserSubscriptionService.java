@@ -1,86 +1,120 @@
 package com.smarth.solutions.core.api.service;
 
+import com.smarth.solutions.core.api.dto.SubscriptionHistoryDTO;
+import com.smarth.solutions.core.api.dto.UserSubscriptionDTO;
+import com.smarth.solutions.core.api.model.entity.Subscription;
+import com.smarth.solutions.core.api.model.entity.UserSubscription;
+import com.smarth.solutions.core.api.model.enums.HistoryAction;
+import com.smarth.solutions.core.api.model.enums.SubscriptionStatus;
+import com.smarth.solutions.core.api.repository.UserSubscriptionRepository;
+import com.smarth.solutions.core.api.util.Validations;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-
-import com.smarth.solutions.core.api.dto.UserSubscriptionDTO;
-import com.smarth.solutions.core.api.model.SubscriptionProduct;
-import com.smarth.solutions.core.api.model.UserSubscription;
-import com.smarth.solutions.core.api.repository.SubscriptionProductRepository;
-import com.smarth.solutions.core.api.repository.UserSubscriptionRepository;
-import com.smarth.solutions.core.api.util.Validation;
-
-import jakarta.transaction.Transactional;
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
-@Transactional
 public class UserSubscriptionService {
 
-    private final UserSubscriptionRepository repository;
-    private final SubscriptionProductRepository productRepository;
-    private final Validation validation;
+    @Autowired
+    private UserSubscriptionRepository userSubscriptionRepository;
+    
+    @Autowired
+    private SubscriptionService subscriptionService;
+    
+    @Autowired
+    private SubscriptionHistoryService historyService;
+    
+    @Autowired
+    private Validations validations;
 
-    public UserSubscriptionService(UserSubscriptionRepository repository, 
-                                   SubscriptionProductRepository productRepository, 
-                                   Validation validation) {
-        this.repository = repository;
-        this.productRepository = productRepository;
-        this.validation = validation;
+    @Transactional(readOnly = true)
+    public Optional<UserSubscriptionDTO.Response> getSubscriptionDtoByUserId(Long userId) {
+        validations.validateRequiredId(userId, "userId");
+        return userSubscriptionRepository.findByUserId(userId)
+                .map(UserSubscriptionDTO.Response::fromEntity); 
     }
 
-    public List<UserSubscriptionDTO> findByUser(String userId) {
-        return repository.findByUserId(userId)
-        .stream()
-        .map(this::toDto)
-        .collect(Collectors.toList());
+    @Transactional
+    @CacheEvict(value = "user_subscription_dto", key = "#userId")
+    public UserSubscriptionDTO.Response activateOrRenewSubscription(Long userId, UserSubscriptionDTO.ActivateRequest request) {
+        validations.validateRequiredId(userId, "userId");
+        validations.validateRequiredId(request.planId(), "planId");
+
+        Subscription plan = subscriptionService.getPlanEntityById(request.planId());
+        validations.validatePlanIsActiveForPurchase(plan);
+
+        Optional<UserSubscription> existingSubOpt = userSubscriptionRepository.findByUserId(userId);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime periodEnd = now.plusMonths(plan.getDurationMonths());
+
+        UserSubscription sub;
+        HistoryAction action;
+
+        if (existingSubOpt.isPresent()) {
+            sub = existingSubOpt.get();
+            action = Objects.equals(sub.getSubscription().getId(), request.planId()) ? HistoryAction.RENEWAL : HistoryAction.PLAN_CHANGE;
+            
+            
+            sub.setSubscription(plan);
+            sub.setStatus(SubscriptionStatus.ACTIVE);
+            sub.setCurrentPeriodStart(now);
+            sub.setCurrentPeriodEnd(periodEnd);
+            sub.setCancelAtPeriodEnd(false); 
+        } else {
+            sub = new UserSubscription();
+            sub.setUserId(userId);
+            sub.setSubscription(plan);
+            sub.setStatus(SubscriptionStatus.ACTIVE);
+            sub.setStartDate(now);
+            sub.setCurrentPeriodStart(now);
+            sub.setCurrentPeriodEnd(periodEnd);
+            sub.setCancelAtPeriodEnd(false);
+            action = HistoryAction.CREATION;
+        }
+
+        UserSubscription savedSub = userSubscriptionRepository.save(sub);
+        historyService.recordEvent(userId, plan, now, periodEnd, action);
+
+        return UserSubscriptionDTO.Response.fromEntity(savedSub); 
     }
 
-    public UserSubscriptionDTO findById(Long id) {
-        UserSubscription s = validation.requireUserSubscription(id);
-        return toDto(s);
+    @Transactional
+    @CacheEvict(value = "user_subscription_dto", key = "#userId")
+    public UserSubscriptionDTO.Response cancelRenewal(Long userId) {
+        validations.validateRequiredId(userId, "userId");
+
+        UserSubscription sub = userSubscriptionRepository.findByUserId(userId).orElse(null);
+        validations.validateSubscriptionForCancellation(sub); 
+
+        sub.setCancelAtPeriodEnd(true);
+        sub.setStatus(SubscriptionStatus.CANCELED); 
+        
+        UserSubscription savedSub = userSubscriptionRepository.save(sub);
+
+        historyService.recordEvent(userId, sub.getSubscription(), sub.getCurrentPeriodStart(), sub.getCurrentPeriodEnd(), HistoryAction.CANCELLATION);
+
+        return UserSubscriptionDTO.Response.fromEntity(savedSub);
     }
 
-    public UserSubscriptionDTO create(UserSubscriptionDTO dto) {
-        
-        SubscriptionProduct product = validation.requireProduct(dto.getProductId());
-        UserSubscription s = new UserSubscription();
-        
-        s.setUserId(dto.getUserId());
-        s.setProduct(product);
-        s.setStatus(dto.getStatus() == null ? "PENDING" : dto.getStatus());
-        s.setStartAt(dto.getStartAt() == null ? LocalDateTime.now() : dto.getStartAt());
-        s.setCurrentPeriodEnd(dto.getCurrentPeriodEnd());
-        
-        UserSubscription saved = repository.save(s);
-        
-        return toDto(saved);
+    public List<SubscriptionHistoryDTO.Response> getHistoryByUserId(Long userId) {
+        validations.validateRequiredId(userId, "userId");
+        return historyService.getHistoryByUserId(userId)
+                .stream()
+                .map(SubscriptionHistoryDTO.Response::fromEntity)
+                .toList();
     }
 
-    public UserSubscriptionDTO update(Long id, UserSubscriptionDTO dto) {
-
-        UserSubscription existing = validation.requireUserSubscription(id);
-        
-        if (dto.getStatus() != null) existing.setStatus(dto.getStatus());
-        
-        if (dto.getCurrentPeriodEnd() != null) existing.setCurrentPeriodEnd(dto.getCurrentPeriodEnd());
-        
-        UserSubscription saved = repository.save(existing);
-        return toDto(saved);
-    }
-
-    public void delete(Long id) {
-        repository.deleteById(id);
-    }
-
-    private UserSubscriptionDTO toDto(UserSubscription s) {
-        return new UserSubscriptionDTO(s.getId(), 
-        s.getUserId(), 
-        s.getProduct().getId(), 
-        s.getStatus(), 
-        s.getStartAt(), 
-        s.getCurrentPeriodEnd());
+    @Transactional(readOnly = true)
+    public List<UserSubscriptionDTO.Response> getAllSubscriptions() {
+        return userSubscriptionRepository.findAll()
+                .stream()
+                .map(UserSubscriptionDTO.Response::fromEntity)
+                .toList();
     }
 }
