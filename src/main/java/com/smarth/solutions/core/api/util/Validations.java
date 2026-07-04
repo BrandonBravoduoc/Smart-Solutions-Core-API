@@ -24,6 +24,15 @@ public class Validations {
         if (plan.getName() == null || plan.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del plan es un campo obligatorio y no puede estar vacío.");
         }
+        if (plan.getName().trim().length() < 2 || plan.getName().trim().length() > 100) {
+            throw new IllegalArgumentException("El nombre del plan debe tener entre 2 y 100 caracteres.");
+        }
+        if (plan.getDetails() == null || plan.getDetails().trim().isEmpty()) {
+            throw new IllegalArgumentException("La descripción del plan es un campo obligatorio y no puede estar vacía.");
+        }
+        if (plan.getDetails().trim().length() > 255) {
+            throw new IllegalArgumentException("La descripción del plan no puede superar los 255 caracteres.");
+        }
         if (plan.getPrice() == null || plan.getPrice().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("El precio del plan no puede ser nulo ni un valor negativo.");
         }
