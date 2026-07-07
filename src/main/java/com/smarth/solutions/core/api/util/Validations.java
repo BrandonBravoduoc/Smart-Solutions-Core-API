@@ -2,6 +2,8 @@ package com.smarth.solutions.core.api.util;
 
 import com.smarth.solutions.core.api.model.entity.Subscription;
 import com.smarth.solutions.core.api.model.entity.UserSubscription;
+import com.smarth.solutions.core.api.model.enums.ApprovalStatus;
+import com.smarth.solutions.core.api.model.enums.ServiceType;
 import com.smarth.solutions.core.api.model.enums.SubscriptionStatus;
 import org.springframework.stereotype.Component;
 
@@ -39,8 +41,24 @@ public class Validations {
         if (plan.getDurationMonths() == null || plan.getDurationMonths() <= 0) {
             throw new IllegalArgumentException("La duración del plan debe ser de al menos 1 mes.");
         }
+        if (plan.getServiceType() == null) {
+            throw new IllegalArgumentException("Debe indicar si el servicio es virtual, presencial o ambas.");
+        }
+        if (plan.getServiceType() == ServiceType.VIRTUAL && plan.getAddressId() != null) {
+            throw new IllegalArgumentException("Un servicio virtual no puede tener una sucursal asociada.");
+        }
+        if (plan.getServiceType() != ServiceType.VIRTUAL && plan.getAddressId() == null) {
+            throw new IllegalArgumentException("Debe indicar la sucursal para un servicio presencial o mixto.");
+        }
     }
 
+
+    public void assertPendingApproval(Subscription plan) {
+        if (plan.getApprovalStatus() != ApprovalStatus.PENDING) {
+            throw new IllegalStateException(
+                "Esta propuesta ya fue procesada (estado actual: " + plan.getApprovalStatus() + ").");
+        }
+    }
 
     public void validatePlanIsActiveForPurchase(Subscription plan) {
         if (!plan.isActive()) {

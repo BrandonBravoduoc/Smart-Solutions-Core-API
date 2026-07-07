@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.smarth.solutions.core.api.dto.SubscriptionDTO;
 import com.smarth.solutions.core.api.model.entity.Subscription;
+import com.smarth.solutions.core.api.model.enums.ApprovalStatus;
+import com.smarth.solutions.core.api.model.enums.ServiceType;
 import com.smarth.solutions.core.api.repository.SubscriptionRepository;
 import com.smarth.solutions.core.api.util.Validations;
 
@@ -28,9 +30,9 @@ public class SubscriptionService {
 
     @Cacheable(value = "active_plans_dto", key = "'all'")
     public List<SubscriptionDTO.Response> getAllActivePlans() {
-        return subscriptionRepository.findByIsActiveTrue()
+        return subscriptionRepository.findByIsActiveTrueAndApprovalStatus(ApprovalStatus.APPROVED)
                 .stream()
-                .map(SubscriptionDTO.Response::fromEntity) 
+                .map(SubscriptionDTO.Response::fromEntity)
                 .toList();
     }
 
@@ -43,6 +45,43 @@ public class SubscriptionService {
                 .stream()
                 .map(SubscriptionDTO.Response::fromEntity)
                 .toList();
+    }
+
+    public List<SubscriptionDTO.Response> getPendingPlans() {
+        return subscriptionRepository.findByApprovalStatus(ApprovalStatus.PENDING)
+                .stream()
+                .map(SubscriptionDTO.Response::fromEntity)
+                .toList();
+    }
+
+    /**
+     * Planes que un cliente propuso (es dueño), en cualquier estado de aprobación —
+     * para que pueda gestionar su propio servicio desde su perfil.
+     */
+    public List<SubscriptionDTO.Response> getMyPlans(Long proposedByUserId) {
+        validations.validateRequiredId(proposedByUserId, "proposedByUserId");
+        return subscriptionRepository.findByProposedByUserId(proposedByUserId)
+                .stream()
+                .map(SubscriptionDTO.Response::fromEntity)
+                .toList();
+    }
+
+    /**
+     * Usado desde @PreAuthorize para permitir que el dueño de un plan lo edite,
+     * además del administrador.
+     */
+    public boolean isOwnPlan(Long planId, String userIdStr) {
+        if (planId == null || userIdStr == null) {
+            return false;
+        }
+        try {
+            Long userId = Long.valueOf(userIdStr);
+            return subscriptionRepository.findById(planId)
+                    .map(plan -> userId.equals(plan.getProposedByUserId()))
+                    .orElse(false);
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     protected Subscription getPlanEntityById(Long id) {
@@ -61,12 +100,70 @@ public class SubscriptionService {
         plan.setDetails(requestDto.details());
         plan.setPrice(requestDto.price());
         plan.setDurationMonths(requestDto.durationMonths());
+        // El panel de admin actual no pide tipo/sucursal: si no viene, se asume virtual
+        // para no exigir una dirección que esa pantalla nunca captura.
+        plan.setServiceType(requestDto.serviceType() != null ? requestDto.serviceType() : ServiceType.VIRTUAL);
+        plan.setAddressId(requestDto.addressId());
 
         validations.validatePlanDetails(plan);
         plan.setActive(true);
+        plan.setApprovalStatus(ApprovalStatus.APPROVED);
 
         Subscription savedPlan = subscriptionRepository.save(plan);
-        return SubscriptionDTO.Response.fromEntity(savedPlan); 
+        return SubscriptionDTO.Response.fromEntity(savedPlan);
+    }
+
+    /**
+     * Un cliente propone "hostear" su propio servicio (virtual, presencial o ambas).
+     * Queda inactivo y pendiente de aprobación hasta que el administrador lo revise.
+     */
+    @Transactional
+    @CacheEvict(value = "active_plans_dto", allEntries = true)
+    public SubscriptionDTO.Response proposePlan(SubscriptionDTO.Request requestDto, Long proposedByUserId) {
+        validations.validateRequiredId(proposedByUserId, "proposedByUserId");
+
+        Subscription plan = new Subscription();
+        plan.setName(requestDto.name());
+        plan.setDetails(requestDto.details());
+        plan.setPrice(requestDto.price());
+        plan.setDurationMonths(requestDto.durationMonths());
+        plan.setServiceType(requestDto.serviceType());
+        plan.setAddressId(requestDto.addressId());
+
+        validations.validatePlanDetails(plan);
+
+        plan.setActive(false);
+        plan.setApprovalStatus(ApprovalStatus.PENDING);
+        plan.setProposedByUserId(proposedByUserId);
+
+        Subscription savedPlan = subscriptionRepository.save(plan);
+        return SubscriptionDTO.Response.fromEntity(savedPlan);
+    }
+
+    @Transactional
+    @CacheEvict(value = "active_plans_dto", allEntries = true)
+    public SubscriptionDTO.Response approvePlan(Long id) {
+        Subscription plan = getPlanEntityById(id);
+        validations.assertPendingApproval(plan);
+
+        plan.setApprovalStatus(ApprovalStatus.APPROVED);
+        plan.setActive(true);
+
+        Subscription savedPlan = subscriptionRepository.save(plan);
+        return SubscriptionDTO.Response.fromEntity(savedPlan);
+    }
+
+    @Transactional
+    @CacheEvict(value = "active_plans_dto", allEntries = true)
+    public SubscriptionDTO.Response rejectPlan(Long id) {
+        Subscription plan = getPlanEntityById(id);
+        validations.assertPendingApproval(plan);
+
+        plan.setApprovalStatus(ApprovalStatus.REJECTED);
+        plan.setActive(false);
+
+        Subscription savedPlan = subscriptionRepository.save(plan);
+        return SubscriptionDTO.Response.fromEntity(savedPlan);
     }
 
     @Transactional
@@ -82,6 +179,8 @@ public class SubscriptionService {
         plan.setPrice(requestDto.price());
         plan.setDurationMonths(requestDto.durationMonths());
         plan.setActive(requestDto.isActive());
+        plan.setServiceType(requestDto.serviceType() != null ? requestDto.serviceType() : plan.getServiceType());
+        plan.setAddressId(requestDto.addressId());
 
         validations.validatePlanDetails(plan);
 

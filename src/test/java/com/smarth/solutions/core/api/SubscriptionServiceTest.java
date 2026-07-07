@@ -11,6 +11,7 @@ import java.util.Optional;
 import com.github.javafaker.Faker;
 import com.smarth.solutions.core.api.dto.SubscriptionDTO;
 import com.smarth.solutions.core.api.model.entity.Subscription;
+import com.smarth.solutions.core.api.model.enums.ServiceType;
 import com.smarth.solutions.core.api.repository.SubscriptionRepository;
 import com.smarth.solutions.core.api.service.SubscriptionService;
 import com.smarth.solutions.core.api.util.Validations;
@@ -73,7 +74,9 @@ class SubscriptionServiceTest {
                 "Plan generado por prueba automática",
                 new BigDecimal("19990"),
                 2,
-                true
+                true,
+                ServiceType.VIRTUAL,
+                null
         );
 
         Subscription saved = new Subscription();
@@ -125,7 +128,9 @@ class SubscriptionServiceTest {
                 "Descripción de prueba",
                 new BigDecimal("14990"),
                 1,
-                true
+                true,
+                ServiceType.VIRTUAL,
+                null
         );
 
         Subscription saved = new Subscription();
