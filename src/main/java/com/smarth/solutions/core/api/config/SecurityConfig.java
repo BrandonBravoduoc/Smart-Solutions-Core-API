@@ -10,12 +10,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import lombok.RequiredArgsConstructor;
 
-/**
- * Sin CORS propio: este servicio ya no es alcanzable directo desde el navegador
- * (solo dentro de la red de docker), el Gateway es el único que habla con el
- * browser y es quien maneja CORS. Tenerlo en ambos lados duplica la cabecera
- * Access-Control-Allow-Origin y el navegador rechaza la respuesta.
- */
 @Configuration
 @EnableMethodSecurity
 @RequiredArgsConstructor

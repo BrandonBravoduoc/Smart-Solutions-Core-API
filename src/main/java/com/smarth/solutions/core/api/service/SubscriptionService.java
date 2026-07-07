@@ -54,10 +54,6 @@ public class SubscriptionService {
                 .toList();
     }
 
-    /**
-     * Planes que un cliente propuso (es dueño), en cualquier estado de aprobación —
-     * para que pueda gestionar su propio servicio desde su perfil.
-     */
     public List<SubscriptionDTO.Response> getMyPlans(Long proposedByUserId) {
         validations.validateRequiredId(proposedByUserId, "proposedByUserId");
         return subscriptionRepository.findByProposedByUserId(proposedByUserId)
@@ -66,10 +62,6 @@ public class SubscriptionService {
                 .toList();
     }
 
-    /**
-     * Usado desde @PreAuthorize para permitir que el dueño de un plan lo edite,
-     * además del administrador.
-     */
     public boolean isOwnPlan(Long planId, String userIdStr) {
         if (planId == null || userIdStr == null) {
             return false;
@@ -100,8 +92,6 @@ public class SubscriptionService {
         plan.setDetails(requestDto.details());
         plan.setPrice(requestDto.price());
         plan.setDurationMonths(requestDto.durationMonths());
-        // El panel de admin actual no pide tipo/sucursal: si no viene, se asume virtual
-        // para no exigir una dirección que esa pantalla nunca captura.
         plan.setServiceType(requestDto.serviceType() != null ? requestDto.serviceType() : ServiceType.VIRTUAL);
         plan.setAddressId(requestDto.addressId());
 
@@ -113,10 +103,6 @@ public class SubscriptionService {
         return SubscriptionDTO.Response.fromEntity(savedPlan);
     }
 
-    /**
-     * Un cliente propone "hostear" su propio servicio (virtual, presencial o ambas).
-     * Queda inactivo y pendiente de aprobación hasta que el administrador lo revise.
-     */
     @Transactional
     @CacheEvict(value = "active_plans_dto", allEntries = true)
     public SubscriptionDTO.Response proposePlan(SubscriptionDTO.Request requestDto, Long proposedByUserId) {

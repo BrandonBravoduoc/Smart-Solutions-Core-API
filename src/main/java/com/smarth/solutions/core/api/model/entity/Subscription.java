@@ -51,13 +51,9 @@ public class Subscription {
     @Column(name = "approval_status", nullable = false)
     private ApprovalStatus approvalStatus = ApprovalStatus.APPROVED;
 
-    // Null para los planes que crea el administrador directamente; con valor
-    // cuando un cliente propone "hostear" su propia suscripción para aprobación.
     @Column(name = "proposed_by_user_id")
     private Long proposedByUserId;
 
-    // Sucursal (Address, vive en Auth API) asociada a la suscripción presencial/ambas.
-    // Null si el servicio es solo virtual.
     @Column(name = "address_id")
     private Long addressId;
 

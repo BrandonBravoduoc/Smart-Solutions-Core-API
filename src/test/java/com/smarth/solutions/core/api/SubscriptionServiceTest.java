@@ -144,6 +144,6 @@ class SubscriptionServiceTest {
 
         SubscriptionDTO.Response result = subscriptionService.createPlan(request);
 
-        assertEquals("Plan Inexistente XYZ", result.name()); // falla: el nombre real es distinto
+        assertEquals("Plan Inexistente XYZ", result.name());
     }
 }

@@ -43,7 +43,6 @@ public class SubscriptionController {
     }
 
 
-    // El dueño (quien propuso el plan) también puede editar el suyo, además del admin.
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR') or @subscriptionService.isOwnPlan(#id, authentication.name)")
     public ResponseEntity<SubscriptionDTO.Response> updatePlan(
@@ -59,10 +58,6 @@ public class SubscriptionController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Un cliente propone "hostear" su propio servicio de suscripción (virtual,
-     * presencial o ambas). Queda pendiente de aprobación del administrador.
-     */
     @PostMapping("/propose")
     @PreAuthorize("hasRole('CLIENTE')")
     public ResponseEntity<SubscriptionDTO.Response> proposePlan(
@@ -79,10 +74,6 @@ public class SubscriptionController {
         return ResponseEntity.ok(subscriptionService.getPendingPlans());
     }
 
-    /**
-     * Planes que el cliente logueado propuso (es dueño), en cualquier estado,
-     * para que los gestione desde su perfil.
-     */
     @GetMapping("/mine")
     @PreAuthorize("hasRole('CLIENTE')")
     public ResponseEntity<List<SubscriptionDTO.Response>> getMyPlans(Authentication authentication) {
