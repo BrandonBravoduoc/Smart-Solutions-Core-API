@@ -5,12 +5,17 @@ import com.smarth.solutions.core.api.model.entity.UserSubscription;
 import com.smarth.solutions.core.api.model.enums.ApprovalStatus;
 import com.smarth.solutions.core.api.model.enums.ServiceType;
 import com.smarth.solutions.core.api.model.enums.SubscriptionStatus;
+import com.smarth.solutions.core.api.repository.SubscriptionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
 @Component
 public class Validations {
+
+    @Autowired
+    private SubscriptionRepository subscriptionRepository;
 
     public void validateRequiredId(Long id, String idName) {
         if (id == null || id <= 0) {
@@ -49,6 +54,15 @@ public class Validations {
         }
         if (plan.getServiceType() != ServiceType.VIRTUAL && plan.getAddressId() == null) {
             throw new IllegalArgumentException("Debe indicar la sucursal para un servicio presencial o mixto.");
+        }
+    }
+
+    public void assertNameNotDuplicated(String name, Long excludeId) {
+        boolean duplicated = excludeId == null
+            ? subscriptionRepository.existsByNameIgnoreCase(name.trim())
+            : subscriptionRepository.existsByNameIgnoreCaseAndIdNot(name.trim(), excludeId);
+        if (duplicated) {
+            throw new IllegalArgumentException("Ya existe un plan de suscripción con el nombre '" + name.trim() + "'.");
         }
     }
 

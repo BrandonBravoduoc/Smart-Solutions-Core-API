@@ -96,6 +96,7 @@ public class SubscriptionService {
         plan.setAddressId(requestDto.addressId());
 
         validations.validatePlanDetails(plan);
+        validations.assertNameNotDuplicated(plan.getName(), null);
         plan.setActive(true);
         plan.setApprovalStatus(ApprovalStatus.APPROVED);
 
@@ -117,6 +118,7 @@ public class SubscriptionService {
         plan.setAddressId(requestDto.addressId());
 
         validations.validatePlanDetails(plan);
+        validations.assertNameNotDuplicated(plan.getName(), null);
 
         plan.setActive(false);
         plan.setApprovalStatus(ApprovalStatus.PENDING);
@@ -169,6 +171,7 @@ public class SubscriptionService {
         plan.setAddressId(requestDto.addressId());
 
         validations.validatePlanDetails(plan);
+        validations.assertNameNotDuplicated(plan.getName(), id);
 
         Subscription updatedPlan = subscriptionRepository.save(plan);
         return SubscriptionDTO.Response.fromEntity(updatedPlan);
