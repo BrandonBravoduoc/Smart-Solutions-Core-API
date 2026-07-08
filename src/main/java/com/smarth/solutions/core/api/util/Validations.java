@@ -35,8 +35,8 @@ public class Validations {
         if (plan.getName() == null || plan.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del plan es un campo obligatorio y no puede estar vacío.");
         }
-        if (plan.getName().trim().length() < 10 || plan.getName().trim().length() > 100) {
-            throw new IllegalArgumentException("El nombre del plan debe tener entre 10 y 100 caracteres.");
+        if (plan.getName().trim().length() < 3 || plan.getName().trim().length() > 100) {
+            throw new IllegalArgumentException("El nombre del plan debe tener entre 3 y 100 caracteres.");
         }
         if (plan.getDetails() == null || plan.getDetails().trim().isEmpty()) {
             throw new IllegalArgumentException("La descripción del plan es un campo obligatorio y no puede estar vacía.");
