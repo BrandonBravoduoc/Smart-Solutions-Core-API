@@ -7,7 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.smarth.solutions.core.api.dto.SubscriptionDTO;
 import com.smarth.solutions.core.api.model.entity.Subscription;
+import com.smarth.solutions.core.api.model.enums.ApprovalStatus;
+import com.smarth.solutions.core.api.model.enums.ServiceType;
 import com.smarth.solutions.core.api.repository.SubscriptionRepository;
+import com.smarth.solutions.core.api.repository.UserSubscriptionRepository;
 import com.smarth.solutions.core.api.util.Validations;
 
 
@@ -22,15 +25,18 @@ public class SubscriptionService {
     private SubscriptionRepository subscriptionRepository;
 
     @Autowired
+    private UserSubscriptionRepository userSubscriptionRepository;
+
+    @Autowired
     private Validations validations;
 
 
 
     @Cacheable(value = "active_plans_dto", key = "'all'")
     public List<SubscriptionDTO.Response> getAllActivePlans() {
-        return subscriptionRepository.findByIsActiveTrue()
+        return subscriptionRepository.findByIsActiveTrueAndApprovalStatus(ApprovalStatus.APPROVED)
                 .stream()
-                .map(SubscriptionDTO.Response::fromEntity) 
+                .map(SubscriptionDTO.Response::fromEntity)
                 .toList();
     }
 
@@ -43,6 +49,35 @@ public class SubscriptionService {
                 .stream()
                 .map(SubscriptionDTO.Response::fromEntity)
                 .toList();
+    }
+
+    public List<SubscriptionDTO.Response> getPendingPlans() {
+        return subscriptionRepository.findByApprovalStatus(ApprovalStatus.PENDING)
+                .stream()
+                .map(SubscriptionDTO.Response::fromEntity)
+                .toList();
+    }
+
+    public List<SubscriptionDTO.Response> getMyPlans(Long proposedByUserId) {
+        validations.validateRequiredId(proposedByUserId, "proposedByUserId");
+        return subscriptionRepository.findByProposedByUserId(proposedByUserId)
+                .stream()
+                .map(SubscriptionDTO.Response::fromEntity)
+                .toList();
+    }
+
+    public boolean isOwnPlan(Long planId, String userIdStr) {
+        if (planId == null || userIdStr == null) {
+            return false;
+        }
+        try {
+            Long userId = Long.valueOf(userIdStr);
+            return subscriptionRepository.findById(planId)
+                    .map(plan -> userId.equals(plan.getProposedByUserId()))
+                    .orElse(false);
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     protected Subscription getPlanEntityById(Long id) {
@@ -61,12 +96,66 @@ public class SubscriptionService {
         plan.setDetails(requestDto.details());
         plan.setPrice(requestDto.price());
         plan.setDurationMonths(requestDto.durationMonths());
+        plan.setServiceType(requestDto.serviceType() != null ? requestDto.serviceType() : ServiceType.VIRTUAL);
+        plan.setAddressId(requestDto.addressId());
 
         validations.validatePlanDetails(plan);
+        validations.assertNameNotDuplicated(plan.getName(), null);
+        plan.setActive(true);
+        plan.setApprovalStatus(ApprovalStatus.APPROVED);
+
+        Subscription savedPlan = subscriptionRepository.save(plan);
+        return SubscriptionDTO.Response.fromEntity(savedPlan);
+    }
+
+    @Transactional
+    @CacheEvict(value = "active_plans_dto", allEntries = true)
+    public SubscriptionDTO.Response proposePlan(SubscriptionDTO.Request requestDto, Long proposedByUserId) {
+        validations.validateRequiredId(proposedByUserId, "proposedByUserId");
+
+        Subscription plan = new Subscription();
+        plan.setName(requestDto.name());
+        plan.setDetails(requestDto.details());
+        plan.setPrice(requestDto.price());
+        plan.setDurationMonths(requestDto.durationMonths());
+        plan.setServiceType(requestDto.serviceType());
+        plan.setAddressId(requestDto.addressId());
+
+        validations.validatePlanDetails(plan);
+        validations.assertNameNotDuplicated(plan.getName(), null);
+
+        plan.setActive(false);
+        plan.setApprovalStatus(ApprovalStatus.PENDING);
+        plan.setProposedByUserId(proposedByUserId);
+
+        Subscription savedPlan = subscriptionRepository.save(plan);
+        return SubscriptionDTO.Response.fromEntity(savedPlan);
+    }
+
+    @Transactional
+    @CacheEvict(value = "active_plans_dto", allEntries = true)
+    public SubscriptionDTO.Response approvePlan(Long id) {
+        Subscription plan = getPlanEntityById(id);
+        validations.assertPendingApproval(plan);
+
+        plan.setApprovalStatus(ApprovalStatus.APPROVED);
         plan.setActive(true);
 
         Subscription savedPlan = subscriptionRepository.save(plan);
-        return SubscriptionDTO.Response.fromEntity(savedPlan); 
+        return SubscriptionDTO.Response.fromEntity(savedPlan);
+    }
+
+    @Transactional
+    @CacheEvict(value = "active_plans_dto", allEntries = true)
+    public SubscriptionDTO.Response rejectPlan(Long id) {
+        Subscription plan = getPlanEntityById(id);
+        validations.assertPendingApproval(plan);
+
+        plan.setApprovalStatus(ApprovalStatus.REJECTED);
+        plan.setActive(false);
+
+        Subscription savedPlan = subscriptionRepository.save(plan);
+        return SubscriptionDTO.Response.fromEntity(savedPlan);
     }
 
     @Transactional
@@ -77,13 +166,22 @@ public class SubscriptionService {
         }
         Subscription plan = getPlanEntityById(id);
 
+        if (requestDto.isActive()) {
+            validations.assertPlanApprovedForActivation(plan);
+        } else {
+            validations.assertPlanDeactivatable(id);
+        }
+
         plan.setName(requestDto.name());
         plan.setDetails(requestDto.details());
         plan.setPrice(requestDto.price());
         plan.setDurationMonths(requestDto.durationMonths());
         plan.setActive(requestDto.isActive());
+        plan.setServiceType(requestDto.serviceType() != null ? requestDto.serviceType() : plan.getServiceType());
+        plan.setAddressId(requestDto.addressId());
 
         validations.validatePlanDetails(plan);
+        validations.assertNameNotDuplicated(plan.getName(), id);
 
         Subscription updatedPlan = subscriptionRepository.save(plan);
         return SubscriptionDTO.Response.fromEntity(updatedPlan);
@@ -93,6 +191,8 @@ public class SubscriptionService {
     @CacheEvict(value = "active_plans_dto", allEntries = true)
     public void deletePlan(Long id) {
         Subscription plan = getPlanEntityById(id);
+        validations.assertPlanDeletable(id);
+        userSubscriptionRepository.deleteBySubscription_Id(id);
         subscriptionRepository.delete(plan);
     }
 }

@@ -124,6 +124,6 @@ class UserSubscriptionServiceTest {
 
         UserSubscriptionDTO.Response result = userSubscriptionService.cancelRenewal(100L);
 
-        assertEquals("EXPIRED", result.status()); // falla: el estado real es CANCELED
+        assertEquals("EXPIRED", result.status());
     }
 }

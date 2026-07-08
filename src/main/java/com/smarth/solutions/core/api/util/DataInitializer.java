@@ -1,6 +1,7 @@
 package com.smarth.solutions.core.api.util;
 
 import com.smarth.solutions.core.api.model.entity.Subscription;
+import com.smarth.solutions.core.api.model.enums.ServiceType;
 import com.smarth.solutions.core.api.repository.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,26 +24,34 @@ public class DataInitializer implements CommandLineRunner {
         if (subscriptionRepository.count() == 0) {
             log.info("Base de datos vacía. Inicializando planes de suscripción por defecto para el Gimnasio...");
 
+            Long defaultAddressId = 1L;
+
             Subscription planMensual = new Subscription();
             planMensual.setName("Plan Mensual");
             planMensual.setDetails("Acceso completo a las instalaciones de pesas y cardio durante 1 mes.");
-            planMensual.setPrice(new BigDecimal("29.99"));
+            planMensual.setPrice(new BigDecimal("30000"));
             planMensual.setDurationMonths(1);
             planMensual.setActive(true);
+            planMensual.setServiceType(ServiceType.PRESENCIAL);
+            planMensual.setAddressId(defaultAddressId);
 
             Subscription planSemestral = new Subscription();
             planSemestral.setName("Plan Semestral");
             planSemestral.setDetails("Ahorra pagando 6 meses por adelantado. Incluye evaluación física gratuita.");
-            planSemestral.setPrice(new BigDecimal("149.99"));
+            planSemestral.setPrice(new BigDecimal("150000"));
             planSemestral.setDurationMonths(6);
             planSemestral.setActive(true);
+            planSemestral.setServiceType(ServiceType.PRESENCIAL);
+            planSemestral.setAddressId(defaultAddressId);
 
             Subscription planAnual = new Subscription();
             planAnual.setName("Plan Anual VIP");
             planAnual.setDetails("El mejor valor. 12 meses de acceso total, clases grupales y consulta nutricional.");
-            planAnual.setPrice(new BigDecimal("250.00"));
+            planAnual.setPrice(new BigDecimal("250000"));
             planAnual.setDurationMonths(12);
             planAnual.setActive(true);
+            planAnual.setServiceType(ServiceType.PRESENCIAL);
+            planAnual.setAddressId(defaultAddressId);
 
             subscriptionRepository.saveAll(List.of(planMensual, planSemestral, planAnual));
             
