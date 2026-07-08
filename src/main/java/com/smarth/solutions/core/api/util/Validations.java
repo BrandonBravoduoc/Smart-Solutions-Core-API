@@ -6,6 +6,7 @@ import com.smarth.solutions.core.api.model.enums.ApprovalStatus;
 import com.smarth.solutions.core.api.model.enums.ServiceType;
 import com.smarth.solutions.core.api.model.enums.SubscriptionStatus;
 import com.smarth.solutions.core.api.repository.SubscriptionRepository;
+import com.smarth.solutions.core.api.repository.UserSubscriptionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,9 @@ public class Validations {
 
     @Autowired
     private SubscriptionRepository subscriptionRepository;
+
+    @Autowired
+    private UserSubscriptionRepository userSubscriptionRepository;
 
     public void validateRequiredId(Long id, String idName) {
         if (id == null || id <= 0) {
@@ -31,8 +35,8 @@ public class Validations {
         if (plan.getName() == null || plan.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del plan es un campo obligatorio y no puede estar vacío.");
         }
-        if (plan.getName().trim().length() < 2 || plan.getName().trim().length() > 100) {
-            throw new IllegalArgumentException("El nombre del plan debe tener entre 2 y 100 caracteres.");
+        if (plan.getName().trim().length() < 10 || plan.getName().trim().length() > 100) {
+            throw new IllegalArgumentException("El nombre del plan debe tener entre 10 y 100 caracteres.");
         }
         if (plan.getDetails() == null || plan.getDetails().trim().isEmpty()) {
             throw new IllegalArgumentException("La descripción del plan es un campo obligatorio y no puede estar vacía.");
@@ -66,6 +70,27 @@ public class Validations {
         }
     }
 
+
+    public void assertPlanDeletable(Long planId) {
+        if (userSubscriptionRepository.existsBySubscription_IdAndStatus(planId, SubscriptionStatus.ACTIVE)) {
+            throw new IllegalStateException(
+                "No se puede eliminar este plan porque tiene al menos un usuario con una suscripción activa. Solo puedes modificarlo o desactivarlo.");
+        }
+    }
+
+    public void assertPlanDeactivatable(Long planId) {
+        if (userSubscriptionRepository.existsBySubscription_IdAndStatus(planId, SubscriptionStatus.ACTIVE)) {
+            throw new IllegalStateException(
+                "No se puede desactivar este plan porque tiene al menos un usuario con una suscripción activa.");
+        }
+    }
+
+    public void assertPlanApprovedForActivation(Subscription plan) {
+        if (plan.getApprovalStatus() != ApprovalStatus.APPROVED) {
+            throw new IllegalStateException(
+                "No puedes activar este plan hasta que un administrador apruebe tu propuesta (estado actual: " + plan.getApprovalStatus() + ").");
+        }
+    }
 
     public void assertPendingApproval(Subscription plan) {
         if (plan.getApprovalStatus() != ApprovalStatus.PENDING) {

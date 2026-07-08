@@ -10,6 +10,7 @@ import com.smarth.solutions.core.api.model.entity.Subscription;
 import com.smarth.solutions.core.api.model.enums.ApprovalStatus;
 import com.smarth.solutions.core.api.model.enums.ServiceType;
 import com.smarth.solutions.core.api.repository.SubscriptionRepository;
+import com.smarth.solutions.core.api.repository.UserSubscriptionRepository;
 import com.smarth.solutions.core.api.util.Validations;
 
 
@@ -22,6 +23,9 @@ public class SubscriptionService {
 
     @Autowired
     private SubscriptionRepository subscriptionRepository;
+
+    @Autowired
+    private UserSubscriptionRepository userSubscriptionRepository;
 
     @Autowired
     private Validations validations;
@@ -162,6 +166,12 @@ public class SubscriptionService {
         }
         Subscription plan = getPlanEntityById(id);
 
+        if (requestDto.isActive()) {
+            validations.assertPlanApprovedForActivation(plan);
+        } else {
+            validations.assertPlanDeactivatable(id);
+        }
+
         plan.setName(requestDto.name());
         plan.setDetails(requestDto.details());
         plan.setPrice(requestDto.price());
@@ -181,6 +191,8 @@ public class SubscriptionService {
     @CacheEvict(value = "active_plans_dto", allEntries = true)
     public void deletePlan(Long id) {
         Subscription plan = getPlanEntityById(id);
+        validations.assertPlanDeletable(id);
+        userSubscriptionRepository.deleteBySubscription_Id(id);
         subscriptionRepository.delete(plan);
     }
 }

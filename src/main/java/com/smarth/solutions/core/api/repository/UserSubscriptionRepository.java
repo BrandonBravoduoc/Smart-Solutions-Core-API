@@ -18,4 +18,8 @@ public interface UserSubscriptionRepository extends JpaRepository<UserSubscripti
 
     List<UserSubscription> findByCurrentPeriodEndBeforeAndStatusIn(LocalDateTime now, List<SubscriptionStatus> of);
 
+    boolean existsBySubscription_IdAndStatus(Long subscriptionId, SubscriptionStatus status);
+
+    void deleteBySubscription_Id(Long subscriptionId);
+
 }
